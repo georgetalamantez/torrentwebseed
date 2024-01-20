@@ -1,60 +1,24 @@
-name: torrenttools-mag2tor
+name: Download from Magnet Link
+
 on:
-  workflow_dispatch:
-    inputs:
-      name:
-        description: Name of the torrent file
-      comment:
-        description: Comment
-      url:
-        description: URL of the file
-      magnet_link:
-        description: Magnet link for the torrent
-      file_name:
-        description: File name of the file in the torrent
-      piece_size:
-        description: Piece Size. Use auto for automatic calculation, or use the recommended piece size on the README.md file
-      protocol_version:
-        description: BitTorrent Protocol version 1, 2, or hybrid
-        type: choice
-        options: [1, 2, hybrid]
-      maximize_disk_space:
-        description: Maximize disk space. Check if getting out of disk space error
-        type: boolean
-        
+  push:
+    branches:
+      - main
+
 jobs:
-  create_torrent:
+  download:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Maximize disk space
-        if: inputs.maximize_disk_space
-        uses: easimon/maximize-build-space@v10
-        with:
-          remove-dotnet: true
-          remove-android: true
-          remove-haskell: true
-          
-      - name: Setup torrenttools
-        uses: AnimMouse/setup-appimage@v1
-        with:
-          name: torrenttools
-          url: https://github.com/fbdtemme/torrenttools/releases/download/v0.6.2/torrenttools-0.6.2-linux-x86_64.AppImage
-          
-      - name: Download file or use magnet link
-        run: |
-          if [[ -z "${{ inputs.magnet_link }}" ]]; then
-            aria2c -x 16 -o "${{ inputs.file_name }}" "${{ inputs.url }}"
-          else
-            # Handle magnet link (use appropriate command)
-            # For example: transmission-cli "${{ inputs.magnet_link }}"
-            echo "Handle magnet link here"
-          fi
-        
-      - name: Create torrent using torrenttools
-        run: torrenttools create -v "${{ inputs.protocol_version }}" -o "${{ inputs.name }}.torrent" -w "${{ inputs.url }}" -c "${{ inputs.comment }}" -l "${{ inputs.piece_size }}" -s "torrent-webseed-creator" "${{ inputs.file_name }}"
-        
-      - name: Upload torrent file
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ inputs.name }}
-          path: ${{ inputs.name }}.torrent
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Set up aria2
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y aria2
+
+    - name: Download from Magnet Link
+      run: |
+        aria2c --seed-time=0 --summary-interval=2 --disable-ipv6 "YOUR_MAGNET_LINK_HERE"
+
