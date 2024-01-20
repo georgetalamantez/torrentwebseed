@@ -1,38 +1,33 @@
-name: torrenttools
-
+name: torrenttools-mag2tor
 on:
   workflow_dispatch:
     inputs:
       name:
         description: Name of the torrent file
-        required: true
         default: Firefox Setup 102.0
       comment:
         description: Comment
-        required: true
         default: Firefox Setup 102.0 win64 en-US by torrent-webseed-creator
       url:
-        description: URL of the file or Magnet link
-        required: true
-        default: 'magnet:?xt=urn:btih:your-magnet-link-here'
+        description: URL of the file
+        default: 'https://download-installer.cdn.mozilla.net/pub/firefox/releases/102.0/win64/en-US/Firefox%20Setup%20102.0.exe'
+      magnet_link:
+        description: Magnet link for the torrent
       file_name:
         description: File name of the file in the torrent
-        required: true
         default: Firefox Setup 102.0.exe
       piece_size:
         description: Piece Size. Use auto for automatic calculation, or use the recommended piece size on the README.md file
-        required: true
         default: auto
       protocol_version:
         description: BitTorrent Protocol version 1, 2, or hybrid
-        required: true
         default: 1
         type: choice
         options: [1, 2, hybrid]
       maximize_disk_space:
         description: Maximize disk space. Check if getting out of disk space error
         type: boolean
-
+        
 jobs:
   create_torrent:
     runs-on: ubuntu-latest
@@ -44,26 +39,26 @@ jobs:
           remove-dotnet: true
           remove-android: true
           remove-haskell: true
-
+          
       - name: Setup torrenttools
         uses: AnimMouse/setup-appimage@v1
         with:
           name: torrenttools
           url: https://github.com/fbdtemme/torrenttools/releases/download/v0.6.2/torrenttools-0.6.2-linux-x86_64.AppImage
-
-      - name: Download file or magnet link
+          
+      - name: Download file or use magnet link
         run: |
-          if [[ "${{ inputs.url }}" == magnet* ]]; then
-            echo "Using magnet link"
-            # Add the command to handle magnet link
-          else
-            echo "Using URL"
+          if [[ -z "${{ inputs.magnet_link }}" ]]; then
             aria2c -x 16 -o "${{ inputs.file_name }}" "${{ inputs.url }}"
+          else
+            # Handle magnet link (use appropriate command)
+            # For example: transmission-cli "${{ inputs.magnet_link }}"
+            echo "Handle magnet link here"
           fi
-
+        
       - name: Create torrent using torrenttools
         run: torrenttools create -v "${{ inputs.protocol_version }}" -o "${{ inputs.name }}.torrent" -w "${{ inputs.url }}" -c "${{ inputs.comment }}" -l "${{ inputs.piece_size }}" -s "torrent-webseed-creator" "${{ inputs.file_name }}"
-
+        
       - name: Upload torrent file
         uses: actions/upload-artifact@v4
         with:
