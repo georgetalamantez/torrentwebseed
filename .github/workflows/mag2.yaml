@@ -1,4 +1,4 @@
-name: torrenttools-mag2tor
+name: torrenttools-convert
 on:
   workflow_dispatch:
     inputs:
@@ -46,12 +46,8 @@ jobs:
             aria2c -x 16 -o "${{ inputs.file_name }}" "${{ inputs.url }}"
           else
             # Handle magnet link (use appropriate command)
-            # For example: transmission-cli "${{ inputs.magnet_link }}"
-            echo "Handle magnet link here"
+            torrenttools create -v "${{ inputs.protocol_version }}" -o "${{ inputs.name }}.torrent" -m "${{ inputs.magnet_link }}" -c "${{ inputs.comment }}" -l "${{ inputs.piece_size }}" -s "torrent-webseed-creator" "${{ inputs.file_name }}"
           fi
-        
-      - name: Create torrent using torrenttools
-        run: torrenttools create -v "${{ inputs.protocol_version }}" -o "${{ inputs.name }}.torrent" -w "${{ inputs.url }}" -c "${{ inputs.comment }}" -l "${{ inputs.piece_size }}" -s "torrent-webseed-creator" "${{ inputs.file_name }}"
         
       - name: Upload torrent file
         uses: actions/upload-artifact@v4
