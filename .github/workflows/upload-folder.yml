@@ -1,0 +1,28 @@
+name: Upload Folder to Storj IPFS
+
+on:
+  push:
+    branches:
+      - main  # Change to your main branch name if different
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'  # Change to the version you need
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Run Script
+        run: node upload-folder.mjs ${{ secrets.STORJ_IPFS_USERNAME }} ${{ secrets.STORJ_IPFS_PASSWORD }} /path/to/your/folder
+        env:
+          NODE_OPTIONS: --experimental-modules
+
