@@ -19,7 +19,8 @@ jobs:
           node-version: '14'  # Change to the version you need
 
       - name: Install Dependencies
-        run: npm install
+        run: |
+          npm install recursive-js base-path-converter got form-data
 
       - name: Run Script
         run: node upload-folder.mjs ${{ secrets.STORJ_IPFS_USERNAME }} ${{ secrets.STORJ_IPFS_PASSWORD }} /path/to/your/folder
