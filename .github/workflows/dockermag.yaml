@@ -1,0 +1,47 @@
+name: Download Magnet Link
+
+on:
+  workflow_dispatch:
+    inputs:
+      magnet_link:
+        description: 'Magnet link to download'
+        required: true
+
+jobs:
+  download:
+    runs-on: ubuntu-latest
+    container:
+      image: linuxserver/transmission
+      env:
+        PUID: 1000
+        PGID: 1000
+        TZ: America/Chicago # Adjust to your timezone
+      ports:
+        - 9091:9091
+        - 51413:51413
+        - 51413:51413/udp
+    steps:
+    - name: Add Magnet Link
+      run: |
+        echo "Adding magnet link..."
+        curl -s -X POST http://localhost:9091/transmission/rpc \
+          -H 'X-Transmission-Session-Id: $(curl -s -I http://localhost:9091/transmission/rpc | grep -i 'X-Transmission-Session-Id' | awk '{print $2}')' \
+          -d '{"method":"torrent-add","arguments":{"filename":"${{ github.event.inputs.magnet_link }}"}}'
+    - name: Wait for Download
+      run: |
+        echo "Waiting for download to complete..."
+        while true; do
+          status=$(curl -s -X POST http://localhost:9091/transmission/rpc \
+            -H 'X-Transmission-Session-Id: $(curl -s -I http://localhost:9091/transmission/rpc | grep -i 'X-Transmission-Session-Id' | awk '{print $2}')' \
+            -d '{"method":"torrent-get","arguments":{"fields":["status"]}}' | jq '.arguments.torrents[0].status')
+          if [ $status -eq 4 ] || [ $status -eq 6 ]; then
+            echo "Download complete or seeding."
+            break
+          elif [ $status -eq 0 ]; then
+            echo "Download stopped."
+            exit 1
+          else
+            echo "Downloading..."
+            sleep 60
+          fi
+        done
