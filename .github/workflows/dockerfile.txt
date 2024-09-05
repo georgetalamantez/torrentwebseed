@@ -1,0 +1,16 @@
+# Use an official Node.js image
+FROM node:16
+
+# Install WebTorrent globally
+RUN npm install -g webtorrent-cli
+
+# Create a download directory
+RUN mkdir /downloads
+
+# Set the working directory
+WORKDIR /downloads
+
+# Expose a port if you need to stream content (for example, 9000)
+EXPOSE 9000
+
+# The command to run WebTorrent in the container can be provided later
