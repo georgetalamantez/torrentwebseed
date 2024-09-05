@@ -1,10 +1,12 @@
-name: Download Magnet Link with docker
+name: block 301 Download Magnet Link
 
 on:
-  workflow_dispatch:  # Allows the action to be triggered manually
-  push:
-    branches:
-      - main
+  workflow_dispatch:
+    inputs:
+      magnet_link:
+        description: 'Magnet link to download'
+        required: true
+        type: string
 
 jobs:
   download:
@@ -23,7 +25,7 @@ jobs:
       - name: Run Docker container to download magnet link
         run: |
           docker run -d --name aria2-downloader -v ${{ github.workspace }}/downloads:/downloads p3terx/aria2-pro
-          docker exec aria2-downloader aria2c "MAGNET_LINK"
+          docker exec aria2-downloader aria2c "${{ github.event.inputs.magnet_link }}"
 
       - name: Stop and remove Docker container
         run: |
