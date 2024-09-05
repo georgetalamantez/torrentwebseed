@@ -1,0 +1,36 @@
+name: WebTorrent Download
+
+on:
+  workflow_dispatch:
+    inputs:
+      magnet_link:
+        description: 'Magnet Link to Download'
+        required: true
+        default: 'magnet:?xt=urn:btih:your-default-magnet-link-here'
+
+jobs:
+  download-torrent:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install Latest Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 'lts/*' # Ensures the latest LTS version of Node.js is installed
+
+      - name: Install WebTorrent CLI
+        run: |
+          npm install -g webtorrent-cli
+
+      - name: Download Torrent via Magnet Link
+        run: |
+          webtorrent download "${{ github.event.inputs.magnet_link }}" --out /tmp/download
+
+      - name: Upload Torrent Files
+        uses: actions/upload-artifact@v3
+        with:
+          name: downloaded-torrent
+          path: /tmp/download
