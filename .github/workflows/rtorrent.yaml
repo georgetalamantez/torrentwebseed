@@ -19,12 +19,12 @@ jobs:
       - name: Set up Docker
         uses: docker/setup-buildx-action@v3
 
-      - name: Pull Docker image with rTorrent
+      - name: Pull Docker image with libtorrent
         run: docker pull libtorrent/bytetorrent-client
 
-      - name: Run Docker container to download magnet link with rTorrent
+      - name: Run Docker container to download magnet link with libtorrent
         run: |
-          docker run -d --name rtorrent-downloader -v ${{ github.workspace }}/downloads:/downloads crazymax/rtorrent
+          docker run -d --name rtorrent-downloader -v ${{ github.workspace }}/downloads:/downloads libtorrent/bytetorrent-client
           docker exec rtorrent-downloader rtcontrol --torrent "${{ github.event.inputs.magnet_link }}"
 
       - name: Stop and remove Docker container
