@@ -1,4 +1,4 @@
-rtorrent name: Download Magnet Link
+name: rtorrent Download Magnet Link
 
 on:
   workflow_dispatch:
