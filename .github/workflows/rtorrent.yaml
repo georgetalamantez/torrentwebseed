@@ -1,0 +1,39 @@
+name: rTorrent Download
+
+on:
+  workflow_dispatch:
+    inputs:
+      magnet_link:
+        description: 'Magnet Link to Download'
+        required: true
+        default: 'magnet:?xt=urn:btih:your-default-magnet-link-here'
+
+jobs:
+  download-torrent:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install rTorrent
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y rtorrent
+
+      - name: Create rTorrent session and config
+        run: |
+          mkdir -p ~/.session
+          echo "session = ~/.session" > ~/.rtorrent.rc
+          echo "directory = /tmp/download" >> ~/.rtorrent.rc
+
+      - name: Download Torrent via Magnet Link using rTorrent
+        run: |
+          echo "${{ github.event.inputs.magnet_link }}" > magnet_link.txt
+          rtorrent magnet_link.txt
+
+      - name: Upload Torrent Files
+        uses: actions/upload-artifact@v3
+        with:
+          name: downloaded-torrent
+          path: /tmp/download
