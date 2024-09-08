@@ -20,7 +20,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Pull Docker image with rTorrent
-        run: docker pull crazymax/rtorrent
+        run: docker pull libtorrent/bytetorrent-client
 
       - name: Run Docker container to download magnet link with rTorrent
         run: |
