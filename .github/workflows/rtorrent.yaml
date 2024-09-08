@@ -1,4 +1,4 @@
-name: rTorrent Download
+name: rtorrent Download
 
 on:
   workflow_dispatch:
@@ -14,23 +14,26 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
       - name: Install rTorrent
         run: |
           sudo apt-get update
-          sudo apt-get install -y rtorrent
+          sudo apt-get install rtorrent rtorrent-gtk
 
-      - name: Create rTorrent session and config
+      - name: Start rTorrent
         run: |
-          mkdir -p ~/.session
-          echo "session = ~/.session" > ~/.rtorrent.rc
-          echo "directory = /tmp/download" >> ~/.rtorrent.rc
+          rtorrent -c /etc/rtorrent.rc &
 
-      - name: Download Torrent via Magnet Link using rTorrent
+      - name: Download Torrent via Magnet Link
         run: |
-          echo "${{ github.event.inputs.magnet_link }}" > magnet_link.txt
-          rtorrent magnet_link.txt
+          rtorrent-remote -c /etc/rtorrent.rc add "${{ github.event.inputs.magnet_link }}"
+
+      - name: Wait for Download to Complete
+        run: |
+          while [[ -z "$(rtorrent-remote -c /etc/rtorrent.rc status | grep 'Completed')" ]]; do
+            sleep 10
+          done
 
       - name: Upload Torrent Files
         uses: actions/upload-artifact@v3
