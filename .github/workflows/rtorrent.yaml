@@ -1,0 +1,39 @@
+name: rtorrent Download Magnet Link
+
+on:
+  workflow_dispatch:
+    inputs:
+      magnet_link:
+        description: 'Magnet link to download'
+        required: true
+        type: string
+
+jobs:
+  download:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v3
+
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v2
+
+      - name: Pull Docker image with rTorrent
+        run: docker pull crazymax/rtorrent
+
+      - name: Run Docker container to download magnet link with rTorrent
+        run: |
+          docker run -d --name rtorrent-downloader -v ${{ github.workspace }}/downloads:/downloads crazymax/rtorrent
+          docker exec rtorrent-downloader rtcontrol --torrent "${{ github.event.inputs.magnet_link }}"
+
+      - name: Stop and remove Docker container
+        run: |
+          docker stop rtorrent-downloader
+          docker rm rtorrent-downloader
+
+      - name: Upload downloaded files as artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: downloaded-files
+          path: ./downloads
