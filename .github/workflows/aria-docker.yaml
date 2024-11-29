@@ -32,8 +32,13 @@ jobs:
           docker stop aria2-downloader
           docker rm aria2-downloader
 
-      - name: Upload downloaded files as artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: downloaded-files
-          path: ./downloads
+      - name: Upload files to Storj-IPFS
+        run: |
+          for file in $(find ./downloads -type f); do
+            curl -X POST "https://www.storj-ipfs.com/api/v0/add" \
+              -H "Authorization: Basic $(echo -n '${{ secrets.STORJ_USERNAME }}:${{ secrets.STORJ_PASSWORD }}' | base64)" \
+              -F file=@"$file"
+          done
+        env:
+          STORJ_USERNAME: ${{ secrets.STORJ_USERNAME }}
+          STORJ_PASSWORD: ${{ secrets.STORJ_PASSWORD }}
