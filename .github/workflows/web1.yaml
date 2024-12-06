@@ -1,4 +1,4 @@
-name: WebTorrent Download
+name: Aria2 Torrent Download and Upload to Storj-IPFS
 
 on:
   workflow_dispatch:
@@ -16,21 +16,28 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Install Latest Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 'lts/*' # Ensures the latest LTS version of Node.js is installed
-
-      - name: Install WebTorrent CLI
+      - name: Install Aria2
         run: |
-          npm install -g webtorrent-cli
+          sudo apt-get update
+          sudo apt-get install -y aria2
 
       - name: Download Torrent via Magnet Link
         run: |
-          webtorrent download "${{ github.event.inputs.magnet_link }}" --out /tmp/download
+          aria2c --dir=./downloads --seed-time=0 "${{ github.event.inputs.magnet_link }}"
 
-      - name: Upload Torrent Files
+      - name: Upload Files to Storj-IPFS
+        run: |
+          for file in $(find ./downloads -type f); do
+            curl -X POST "https://www.storj-ipfs.com/api/v0/add" \
+              -H "Authorization: Basic $(echo -n '${{ secrets.STORJ_USERNAME }}:${{ secrets.STORJ_PASSWORD }}' | base64)" \
+              -F file=@"$file"
+          done
+        env:
+          STORJ_USERNAME: ${{ secrets.STORJ_USERNAME }}
+          STORJ_PASSWORD: ${{ secrets.STORJ_PASSWORD }}
+
+      - name: Upload Torrent Files as Artifacts
         uses: actions/upload-artifact@v3
         with:
           name: downloaded-torrent
-          path: /tmp/download
+          path: ./downloads
