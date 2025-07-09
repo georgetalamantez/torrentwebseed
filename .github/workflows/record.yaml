@@ -1,0 +1,31 @@
+name: Download Radio Stream 📻
+
+on:
+  schedule:
+    # This cron job is set to run at 03:00 UTC every day.
+    # 9:00 PM Central Standard Time (CST) is 03:00 UTC the next day.
+    # During Central Daylight Time (CDT), this will correspond to 10:00 PM.
+    # Adjust the cron schedule if you need it to strictly follow the 9-12 window during CDT.
+    - cron: '0 3 * * *'
+  workflow_dispatch: # This allows you to manually run the workflow from the Actions tab in your GitHub repository.
+
+jobs:
+  download_and_upload_stream:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install ffmpeg 🎵
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Download 3-hour audio stream 📥
+        run: |
+          # The '-t 10800' flag specifies a duration of 10800 seconds (3 hours).
+          # The stream from the URL will be saved to a file named 'radio_stream.mp3'.
+          ffmpeg -i https://s2.radio.co/s7a9080f05/listen -t 10800 -c copy radio_stream.mp3
+
+      - name: Upload stream as an artifact 📤
+        uses: actions/upload-artifact@v4
+        with:
+          name: radio-stream-${{ github.run_id }}
+          path: radio_stream.mp3
